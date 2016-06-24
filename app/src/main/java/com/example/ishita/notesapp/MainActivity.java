@@ -41,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
 
         switch(id) {
             case R.id.menu_new:
+                showSimplePopUp();
                 //perform action to call activity_notes
                 return true;
             case R.id.menu_delete:
