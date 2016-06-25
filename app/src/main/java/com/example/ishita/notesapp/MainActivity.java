@@ -3,6 +3,8 @@ package com.example.ishita.notesapp;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.os.AsyncTask;
 import android.preference.DialogPreference;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -14,19 +16,23 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 
-import java.util.HashMap;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
+
 public class MainActivity extends AppCompatActivity {
-    private HashMap<String, String> notesList;
+    public ListView lvNotes;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        lvNotes = (ListView) findViewById(R.id.lvNotes);
+
         setContentView(R.layout.activity_main);
-        notesList = new HashMap<String, String>();
-        //call some function to read directory to fill notesList
     }
 
     @Override
@@ -41,9 +47,8 @@ public class MainActivity extends AppCompatActivity {
 
         switch(id) {
             case R.id.menu_new:
-                showSimplePopUp();
-                //perform action to call activity_notes
-                return true;
+                this.startActivity(new Intent(this, NotesActivity.class));
+                break;
             case R.id.menu_delete:
                 //function to delete marked note(s)
                 break;
@@ -67,14 +72,40 @@ public class MainActivity extends AppCompatActivity {
            });
     }
 
-    public class notesPreviewAdapter extends ArrayAdapter<HashMap> {
+    public class FileTaskRunner extends AsyncTask<String, String, List<Pair>> {
+        @Override
+        protected List<Pair> doInBackground(String... params) {
+            /*
+            Code to read directory for files or file for list.
+            */
 
-        private List<HashMap> myList;
+            List<Pair> notesList = new ArrayList<Pair>();
+            for(int i=0; i<10; i++) {
+                Pair pair = new Pair("A-"+i, "B_"+i); //should be Pair(current-file.title, current-file.date);
+                notesList.add(pair);
+            }
+
+            return notesList;
+            //If Try-block insert return null @ end.
+        }
+
+        @Override
+        protected void onPostExecute(List<Pair> listMap) {
+            super.onPostExecute(listMap);
+
+            notesPreviewAdapter noteAdapter = new notesPreviewAdapter(getApplicationContext(), R.layout.note_preview, listMap);
+            lvNotes.setAdapter(noteAdapter);
+        }
+    }
+
+    public class notesPreviewAdapter extends ArrayAdapter<List<Pair>> {
+
+        private List<Pair> myList;
         private int resource;
         private LayoutInflater inflater;
 
-        public notesPreviewAdapter(Context context, int resource, List<HashMap> object) {
-            super(context, resource, object);
+        public notesPreviewAdapter(Context context, int resource, List<Pair> object) {
+            super(context, resource);
             this.resource = resource;
             this.myList = object;
             inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
@@ -95,8 +126,8 @@ public class MainActivity extends AppCompatActivity {
             notePreview_title = (TextView) findViewById(R.id.notePreview_title);
             notePreview_date = (TextView) findViewById(R.id.notePreview_date);
 
-            notePreview_title.setText("This will be from HashMap, the string");
-            notePreview_title.setText("This will be from HashMap, the pair");
+            notePreview_title.setText("This will be from HashMap, the string "+position);
+            notePreview_date.setText("This will be from HashMap, the pair");
 
             return convertView;
         }
