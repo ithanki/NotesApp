@@ -1,38 +1,50 @@
 package com.example.ishita.notesapp;
 
-import android.app.Dialog;
+import android.app.Activity;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.os.AsyncTask;
-import android.preference.DialogPreference;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log; //COOL LIBRARY TO DISPLAY ON ANDROID MONITOR
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
-
 
 public class MainActivity extends AppCompatActivity {
-    public ListView lvNotes;
+    private ListView lv;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        lvNotes = (ListView) findViewById(R.id.lvNotes);
-
         setContentView(R.layout.activity_main);
+        lv = (ListView) findViewById(R.id.listview);
+
+        /* WE SHOULD CALL A FUNCTION TO POPULATE ARRAYLIST */
+        final ArrayList<Pair> myDataArray = new ArrayList<Pair>();
+        for(int i=0; i<10; i++) {
+            myDataArray.add(new Pair("A: "+i, "B: "+ (-i)));
+        }
+        /* ABOVE SHOULD BE FROM DIRECTORY READING OR FILE READING */
+
+        final MyAdapter myAdapter=new MyAdapter(this, R.layout.note_preview, myDataArray);
+        lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                myDataArray.get(position).flipC();
+                myAdapter.notifyDataSetChanged();
+            }
+        });
+        lv.setAdapter(myAdapter);
     }
 
     @Override
@@ -45,10 +57,10 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
-        switch(id) {
+        switch (id) {
             case R.id.menu_new:
-                this.startActivity(new Intent(this, NotesActivity.class));
-                break;
+                startActivity(new Intent(getApplicationContext(), NotesActivity.class));
+                return true;
             case R.id.menu_delete:
                 //function to delete marked note(s)
                 break;
@@ -60,76 +72,44 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private void showSimplePopUp() {
-        AlertDialog.Builder helpBuilder = new AlertDialog.Builder(this);
-        helpBuilder.setTitle("Confirmation");
-        helpBuilder.setMessage("Delete selected note?");
-        helpBuilder.setPositiveButton("Ok",
-           new DialogInterface.OnClickListener() {
-               public void onClick(DialogInterface dialog, int which) {
-                  //popup to confirm delete.
-               }
-           });
-    }
-
-    public class FileTaskRunner extends AsyncTask<String, String, List<Pair>> {
-        @Override
-        protected List<Pair> doInBackground(String... params) {
-            /*
-            Code to read directory for files or file for list.
-            */
-
-            List<Pair> notesList = new ArrayList<Pair>();
-            for(int i=0; i<10; i++) {
-                Pair pair = new Pair("A-"+i, "B_"+i); //should be Pair(current-file.title, current-file.date);
-                notesList.add(pair);
-            }
-
-            return notesList;
-            //If Try-block insert return null @ end.
-        }
-
-        @Override
-        protected void onPostExecute(List<Pair> listMap) {
-            super.onPostExecute(listMap);
-
-            notesPreviewAdapter noteAdapter = new notesPreviewAdapter(getApplicationContext(), R.layout.note_preview, listMap);
-            lvNotes.setAdapter(noteAdapter);
-        }
-    }
-
-    public class notesPreviewAdapter extends ArrayAdapter<List<Pair>> {
-
-        private List<Pair> myList;
+    public class MyAdapter extends ArrayAdapter<Pair> {
+        private Context context;
         private int resource;
-        private LayoutInflater inflater;
+        private ArrayList<Pair> objects;
 
-        public notesPreviewAdapter(Context context, int resource, List<Pair> object) {
-            super(context, resource);
+        public MyAdapter(Context context, int resource, ArrayList<Pair> objects) {
+            super(context, resource, objects);
+            this.context = context;
             this.resource = resource;
-            this.myList = object;
-            inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
+            this.objects = objects;
         }
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
+            LayoutInflater inflater= ((Activity) context).getLayoutInflater();
+            View row=inflater.inflate(resource,parent,false);
 
-            if(convertView == null) {
-                convertView = inflater.inflate(R.layout.note_preview, null);
+            if (convertView == null) {
+                convertView = getLayoutInflater().inflate(R.layout.note_preview, parent, false);
             }
 
             ImageView checkedNoteIcon;
             TextView notePreview_title;
             TextView notePreview_date;
 
-            checkedNoteIcon = (ImageView) findViewById(R.id.checkedNoteIcon);
-            notePreview_title = (TextView) findViewById(R.id.notePreview_title);
-            notePreview_date = (TextView) findViewById(R.id.notePreview_date);
+            checkedNoteIcon = (ImageView) row.findViewById(R.id.checkedNoteIcon);
+            notePreview_title = (TextView) row.findViewById(R.id.notePreview_title);
+            notePreview_date = (TextView) row.findViewById(R.id.notePreview_date);
 
-            notePreview_title.setText("This will be from HashMap, the string "+position);
-            notePreview_date.setText("This will be from HashMap, the pair");
+            if(objects.get(position).getC())
+                checkedNoteIcon.setImageResource(R.drawable.notechecked_icon);
+            else
+                checkedNoteIcon.setImageResource(R.drawable.noteunchecked_icon);
 
-            return convertView;
+            notePreview_title.setText(objects.get(position).getL());
+            notePreview_date.setText(objects.get(position).getR());
+
+            return row;
         }
     }
 }
