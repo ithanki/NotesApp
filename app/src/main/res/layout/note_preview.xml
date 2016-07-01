@@ -9,7 +9,7 @@
         android:layout_height="wrap_content">
 
         <ImageView
-            android:layout_width="40dp"
+            android:layout_width="25dp"
             android:layout_height="70dp"
             android:id="@+id/checkedNoteIcon"
             android:src="@drawable/noteunchecked_icon" />

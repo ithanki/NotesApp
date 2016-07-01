@@ -16,12 +16,15 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class MainActivity extends AppCompatActivity {
     private ListView lv;
+    private ArrayList<Pair> myDataArray = new ArrayList<Pair>();
+    private int prevLongClicked;
+    private MyAdapter myAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,18 +33,36 @@ public class MainActivity extends AppCompatActivity {
         lv = (ListView) findViewById(R.id.listview);
 
         /* WE SHOULD CALL A FUNCTION TO POPULATE ARRAYLIST */
-        final ArrayList<Pair> myDataArray = new ArrayList<Pair>();
         for(int i=0; i<10; i++) {
             myDataArray.add(new Pair("A: "+i, "B: "+ (-i)));
         }
         /* ABOVE SHOULD BE FROM DIRECTORY READING OR FILE READING */
 
         final MyAdapter myAdapter=new MyAdapter(this, R.layout.note_preview, myDataArray);
+        //final MyAdapter adapter2 = myAdapter;
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 myDataArray.get(position).flipC();
                 myAdapter.notifyDataSetChanged();
+            }
+        });
+
+        lv.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> arg0, View arg1, int pos, long id) {
+                if(prevLongClicked != pos) {
+                    Iterator<Pair> myDataIt = myDataArray.iterator();
+                    while (myDataIt.hasNext()) {
+                        Pair p = myDataIt.next();
+                        if (p.getLP())
+                            p.flipL();
+                    }
+                }
+                myDataArray.get(pos).flipL();
+                myAdapter.notifyDataSetChanged();
+                prevLongClicked = pos;
+                return true;
             }
         });
         lv.setAdapter(myAdapter);
@@ -62,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(getApplicationContext(), NotesActivity.class));
                 return true;
             case R.id.menu_delete:
+                deleteNotes();
                 //function to delete marked note(s)
                 break;
             case R.id.menu_edit:
@@ -72,6 +94,20 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    public void deleteNotes() {
+        for (int i = 0; i <  myDataArray.size(); i++) {
+            if(myDataArray.get(i).getLP()) {
+                myDataArray.remove(i);
+              //  myAdapter.notifyDataSetChanged();
+            }
+
+        }
+    }
+
+    public void editNote() {
+        //if more than 1 checked error
+        //otherwise set something for other activity
+    }
     public class MyAdapter extends ArrayAdapter<Pair> {
         private Context context;
         private int resource;
@@ -101,8 +137,14 @@ public class MainActivity extends AppCompatActivity {
             notePreview_title = (TextView) row.findViewById(R.id.notePreview_title);
             notePreview_date = (TextView) row.findViewById(R.id.notePreview_date);
 
-            if(objects.get(position).getC())
+            if(objects.get(position).getC()) {
+                if(objects.get(position).getLP()) objects.get(position).flipL();
                 checkedNoteIcon.setImageResource(R.drawable.notechecked_icon);
+            }
+            else if(objects.get(position).getLP()) {
+                if(objects.get(position).getC()) objects.get(position).flipC();
+                checkedNoteIcon.setImageResource(R.drawable.notelongchecked_icon);
+            }
             else
                 checkedNoteIcon.setImageResource(R.drawable.noteunchecked_icon);
 
