@@ -19,10 +19,11 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-    private ListView lv;
     private ArrayList<Pair> myDataArray = new ArrayList<Pair>();
+    private ListView lv;
     private int prevLongClicked;
     private MyAdapter myAdapter;
 
@@ -33,13 +34,21 @@ public class MainActivity extends AppCompatActivity {
         lv = (ListView) findViewById(R.id.listview);
 
         /* WE SHOULD CALL A FUNCTION TO POPULATE ARRAYLIST */
+        // ** Can we use a main file to list title/date, would be easier than reading directory
         for(int i=0; i<10; i++) {
             myDataArray.add(new Pair("A: "+i, "B: "+ (-i)));
         }
         /* ABOVE SHOULD BE FROM DIRECTORY READING OR FILE READING */
 
-        final MyAdapter myAdapter=new MyAdapter(this, R.layout.note_preview, myDataArray);
-        //final MyAdapter adapter2 = myAdapter;
+        MyAdapter myAdapter=new MyAdapter(this, R.layout.note_preview, myDataArray);
+        lv.setAdapter(myAdapter);
+        clickActions();
+    }
+
+    public void clickActions() {
+        if(myAdapter == null)
+            myAdapter = (MyAdapter) lv.getAdapter();
+
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -65,9 +74,8 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
         });
-        lv.setAdapter(myAdapter);
-    }
 
+    }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
@@ -76,37 +84,45 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        Intent i = new Intent(getApplicationContext(), NotesActivity.class);
         int id = item.getItemId();
 
         switch (id) {
             case R.id.menu_new:
-                startActivity(new Intent(getApplicationContext(), NotesActivity.class));
+                i.putExtra("OPTION","NEW");
+                startActivity(i);
                 return true;
             case R.id.menu_delete:
                 deleteNotes();
-                //function to delete marked note(s)
-                break;
+                myAdapter.notifyDataSetChanged();
+                return true;
             case R.id.menu_edit:
-                //performs action to call activity_notes w/flag for edit
-                break;
+                i.putExtra("OPTION","EDIT");
+                for(Pair p : myDataArray) {
+                    if(p.getLP()) {
+                        i.putExtra("FILE", p.getL() + "_" + p.getR());
+                        break;
+                    }
+                }
+                startActivity(i);
+                return true;
         }
-
         return super.onOptionsItemSelected(item);
     }
 
     public void deleteNotes() {
+        List<Pair> remSelected = new ArrayList<Pair>();
         for (int i = 0; i <  myDataArray.size(); i++) {
-            if(myDataArray.get(i).getLP()) {
-                myDataArray.remove(i);
-              //  myAdapter.notifyDataSetChanged();
-            }
-
+            if(myDataArray.get(i).getC())
+                remSelected.add(myDataArray.get(i));
         }
+
+        for(Pair p : remSelected)
+            myDataArray.remove(p);
     }
 
     public void editNote() {
-        //if more than 1 checked error
-        //otherwise set something for other activity
+        //Call the editNote activity, use myDataArray.getL() ?
     }
     public class MyAdapter extends ArrayAdapter<Pair> {
         private Context context;

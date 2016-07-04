@@ -1,9 +1,11 @@
 package com.example.ishita.notesapp;
 
-public class Pair {
+import java.io.Serializable;
+
+public class Pair implements Serializable{
     private String l;
     private String r;
-    private Boolean check, longP;
+    private Boolean checked_for_delete, long_press;
 
     public Pair() {
         super();
@@ -12,17 +14,17 @@ public class Pair {
         super();
         this.l = l;
         this.r = r;
-        this.check = false;
-        this.longP = false;
+        this.checked_for_delete = false;
+        this.long_press = false;
 
     }
 
     public String getL(){ return l; }
     public String getR(){ return r; }
-    public Boolean getC(){ return check; }
-    public Boolean getLP(){ return longP; }
-    public void flipL(){ this.longP = !longP; }
-    public void flipC(){ this.check = !check; }
+    public Boolean getC(){ return checked_for_delete; }
+    public Boolean getLP(){ return long_press; }
+    public void flipL(){ this.long_press = !long_press; }
+    public void flipC(){ this.checked_for_delete = !checked_for_delete; }
     public void setL(String l){ this.l = l; }
     public void setR(String r){ this.r = r; }
 }
